@@ -1,4 +1,4 @@
-Prompt:
+Prompt 1:
 Create a GitHub Actions workflow file named ci.yml inside the .github/workflows/ directory.
 The workflow should:
 
@@ -79,3 +79,18 @@ jobs:
 ````
 
 Made changes.
+
+Prompt 2:
+
+This ci gives me the following error:
+Error: Unable to resolve action lukka/get-cmake@v3, unable to find version v3
+Fix it.
+
+Response: 
+Solution — step-by-step
+
+Replace the invalid action lukka/get-cmake@v3 with a maintained cross-platform action jwlawson/actions-setup-cmake@v2.
+Keep installing the latest CMake version.
+Leave the rest of the workflow unchanged.
+ci.yml
+Replace the CMake installation action to a valid one that works on all runners.
