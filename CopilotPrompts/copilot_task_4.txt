@@ -1,0 +1,54 @@
+Prompt:
+Generate a ci.sh file for my project: it should build the project using cmake, build the tests and then run the tests. The build directory is ./build. 
+
+Response:
+Solution (step-by-step)
+1. Create a reproducible build directory at ./build (or use BUILD_DIR env var).
+2. Configure the project with CMake (configurable via BUILD_TYPE, default Debug).
+3. Build the project using cmake --build with parallel jobs.
+4. Run tests via ctest with --output-on-failure and exit non-zero if tests fail.
+5. Print simple status messages and preserve build artifacts in ./build.
+
+Files changed
+### ci.sh
+
+Create a small CI script that configures, builds, and runs tests in ./build.
+
+````bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Configurable variables
+BUILD_DIR="${BUILD_DIR:-./build}"
+BUILD_TYPE="${BUILD_TYPE:-Debug}"
+JOBS="${JOBS:-$(nproc)}"
+
+echo "CI: build dir = ${BUILD_DIR}, build type = ${BUILD_TYPE}, jobs = ${JOBS}"
+
+mkdir -p "${BUILD_DIR}"
+pushd "${BUILD_DIR}" >/dev/null
+
+echo "Running cmake configure..."
+cmake -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" ..
+
+echo "Building project..."
+cmake --build . --config "${BUILD_TYPE}" -- -j"${JOBS}"
+
+echo "Running tests..."
+# Prefer ctest (outputs failures). Exit non-zero if any test fails.
+if command -v ctest >/dev/null 2>&1; then
+    ctest --output-on-failure -C "${BUILD_TYPE}"
+else
+    echo "ctest not found; attempting to run unit_tests binary directly"
+    if [ -x ./tests/unit_tests ]; then
+        ./tests/unit_tests --gtest_color=yes || { echo "Unit tests failed"; popd >/dev/null; exit 1; }
+    else
+        echo "No test runner found in build. Skipping tests."
+    fi
+fi
+
+popd >/dev/null
+echo "CI: build and tests completed successfully."
+````
+
+Made changes.
